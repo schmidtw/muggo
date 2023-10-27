@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2022-2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+# SPDX-License-Identifier: Apache-2.0
+---
+coverage:
+  precision: 2
+  round: down
+  range: 80..100
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%

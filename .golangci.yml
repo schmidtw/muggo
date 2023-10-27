@@ -1,0 +1,44 @@
+---
+linters-settings:
+  misspell:
+    locale: US
+  funlen:
+    lines: 80
+    statements: 60
+  gocognit:
+    min-complexity: 26
+
+linters:
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - dupl
+    - errcheck
+    - errname
+    - errorlint
+    - funlen
+    - gocognit
+    - goconst
+    - gosec
+    - ineffassign
+    - misspell
+    - prealloc
+    - unconvert
+
+issues:
+  exclude-rules:
+    - path: _test.go
+      linters:
+        - dupl
+        - funlen
+        - gocognit
+        - goconst
+    - path: pkg/adapter/int.go
+      linters:
+        - dupl
+    - path: pkg/adapter/uint.go
+      linters:
+        - dupl
+  exclude:
+    - "ExampleOrderList refers to unknown identifier: OrderList"
