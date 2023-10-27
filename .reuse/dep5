@@ -26,3 +26,7 @@ License: Apache-2.0
 Files: *.md
 Copyright: SPDX-FileCopyrightText: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
 License: Apache-2.0
+
+Files: assets/mug.png
+Copyright: SPDX-FileCopyrightText: 2021 Alexandre Macabies
+License: MIT
