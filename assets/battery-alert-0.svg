@@ -1,0 +1,19 @@
+<!--
+SPDX-FileCopyrightText: 2020-2023 Paweł Kuna
+SPDX-FileCopyrightText: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+SPDX-License-Identifier: MIT
+-->
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48mm" height="48mm" viewBox="0 -48 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg"
+     stroke-width="2"
+     stroke="red"
+     fill="none"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+>
+<g transform="scale(1,-1)">
+<path d="M 24,30.01  L24,24.01 " style="stroke-width:4"/>
+<path d="M 14,12  L14,34  A4,4 0 0 0 18,38  L19,38  A1,1 0 0 1 20,39  A1,1 0 0 0 21,40  L27,40  A1,1 0 0 0 28,39  A1,1 0 0 1 29,38  L30,38  A4,4 0 0 0 34,34  L34,12  A4,4 0 0 0 30,8  L18,8  A4,4 0 0 0 14,12 "/>
+<path d="M 24,18.01  L24,17.99 " style="stroke-width:4"/>
+</g>
+</svg>

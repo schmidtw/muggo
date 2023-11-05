@@ -1,0 +1,42 @@
+// SPDX-FileCopyrightText: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+// SPDX-License-Identifier: Apache-2.0
+
+package mug
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	bt "tinygo.org/x/bluetooth"
+)
+
+func Test_uuidToApiId(t *testing.T) {
+	tests := []struct {
+		uuid string
+		want int
+	}{
+		{
+			uuid: "fc543622-236c-4c94-8fa9-944a3e5353fa",
+			want: 0x3622,
+		}, {
+			uuid: "fc540001-236c-4c94-8fa9-944a3e5353fa",
+			want: 1,
+		}, {
+			uuid: "fc540901-236c-4c94-8fa9-944a3e5353fa",
+			want: 0x0901,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.uuid, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			uuid, err := bt.ParseUUID(tc.uuid)
+			require.NoError(err)
+			require.NotNil(uuid)
+
+			assert.Equal(tc.want, uuidToApiId(uuid))
+		})
+	}
+}

@@ -1,0 +1,35 @@
+// SPDX-FileCopyrightText: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+// SPDX-License-Identifier: Apache-2.0
+
+package mug
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func Test_floatToC(t *testing.T) {
+	tests := []struct {
+		f    float64
+		want []byte
+	}{
+		{
+			f:    0.0,
+			want: []byte{0x00, 0x00},
+		}, {
+			f:    0.01,
+			want: []byte{0x01, 0x00},
+		}, {
+			f:    56.67,
+			want: []byte{0x23, 0x16},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%02.02f", tc.f), func(t *testing.T) {
+			assert := assert.New(t)
+			assert.Equal(tc.want, floatToC(tc.f))
+		})
+	}
+}

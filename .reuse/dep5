@@ -30,3 +30,21 @@ License: Apache-2.0
 Files: assets/mug.png
 Copyright: SPDX-FileCopyrightText: 2021 Alexandre Macabies
 License: MIT
+
+# These two are a hack to let me associate 2 copyrights with the file.
+Files: assets/battery.dxf
+Copyright: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+License: MIT
+
+Files: assets/battery.dxf
+Copyright: 2020-2023 Paweł Kuna
+License: MIT
+
+# These two are a hack to let me associate 2 copyrights with the file.
+Files: assets/mug.dxf
+Copyright: 2023 Weston Schmidt <weston_schmidt@alumni.purdue.edu>
+License: MIT
+
+Files: assets/mug.dxf
+Copyright: 2020-2023 Paweł Kuna
+License: MIT
