@@ -15,9 +15,13 @@ func (m *Mug) Name(name ...string) (string, error) {
 		write = [][]byte{[]byte(name[0])}
 	}
 
-	data, err := m.io(m, mugApi_NAME, 0, write...)
+	data, _, err := m.io(m, mugApi_NAME, 0, write...)
 
-	return string(data), err
+	return nameFromData(data), err
+}
+
+func nameFromData(data []byte) string {
+	return string(data)
 }
 
 // NameTTL sets the TTL for the name of the mug.

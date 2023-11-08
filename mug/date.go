@@ -26,7 +26,7 @@ func (m *Mug) Timestamp(when ...DateInfo) (*DateInfo, error) {
 		write = [][]byte{buf}
 	}
 
-	data, err := m.io(m, mugApi_TIME_DATE_ZONE, 5, write...)
+	data, _, err := m.io(m, mugApi_TIME_DATE_ZONE, 5, write...)
 	if err != nil {
 		return nil, err
 	}

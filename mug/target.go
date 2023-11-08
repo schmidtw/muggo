@@ -17,12 +17,27 @@ func (m *Mug) Target(temp ...units.Temperature) (units.Temperature, error) {
 		write = [][]byte{temp[0].ToMug()}
 	}
 
-	data, err := m.io(m, mugApi_TARGET, 2, write...)
+	data, changed, err := m.io(m, mugApi_TARGET, 2, write...)
 	if err != nil {
 		return 0, err
 	}
 
-	return units.FromMug(data), nil
+	if changed {
+		m.dispatch()
+	}
+
+	return targetFromData(data), nil
+}
+
+func targetFromData(data []byte) units.Temperature {
+	return units.FromMug(data)
+}
+
+func (m *Mug) targetChanged() {
+	m.m.Lock()
+	m.apis[mugApi_TARGET].expire()
+	m.m.Unlock()
+	_, _ = m.Target()
 }
 
 // TargetTTL sets the TTL for the target temperature of the mug.

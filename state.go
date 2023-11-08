@@ -4,10 +4,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"image/color"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -15,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/schmidtw/muggo/assets"
 	"github.com/schmidtw/muggo/mug"
+	"github.com/schmidtw/muggo/mug/event"
 	"github.com/schmidtw/muggo/units"
 )
 
@@ -45,51 +44,59 @@ func NewState(m *mug.Mug) *State {
 	s := State{
 		m: m,
 		states: map[int]*canvas.Image{
-			MUG_NONE: &canvas.Image{
+			MUG_NONE: {
 				Resource: fyne.NewStaticResource("mug-disconnected.svg", assets.NoMug),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_EMPTY: &canvas.Image{
+			MUG_EMPTY: {
 				Resource: fyne.NewStaticResource("mug-empty.svg", assets.MugEmpty),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_COLD: &canvas.Image{
+			MUG_COLD: {
 				Resource: fyne.NewStaticResource("mug-cold.svg", assets.MugCold),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_COOL: &canvas.Image{
+			MUG_COOL: {
 				Resource: fyne.NewStaticResource("mug-cool.svg", assets.MugCool),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_PERFECT: &canvas.Image{
+			MUG_PERFECT: {
 				Resource: fyne.NewStaticResource("mug-perfect.svg", assets.MugPerfect),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_WARM: &canvas.Image{
+			MUG_WARM: {
 				Resource: fyne.NewStaticResource("mug-warm.svg", assets.MugWarm),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_HOT: &canvas.Image{
+			MUG_HOT: {
 				Resource: fyne.NewStaticResource("mug-hot.svg", assets.MugHot),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_COLD_HEATING: &canvas.Image{
+			MUG_COLD_HEATING: {
 				Resource: fyne.NewStaticResource("mug-cold.svg", assets.MugCold),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_COOL_HEATING: &canvas.Image{
+			MUG_COOL_HEATING: {
 				Resource: fyne.NewStaticResource("mug-cool.svg", assets.MugCool),
 				FillMode: canvas.ImageFillOriginal,
 			},
-			MUG_PERFECT_HEATING: &canvas.Image{
+			MUG_PERFECT_HEATING: {
 				Resource: fyne.NewStaticResource("mug-perfect.svg", assets.MugPerfect),
 				FillMode: canvas.ImageFillOriginal,
 			},
 		},
 		temp: canvas.NewText(" 78.0 °F", color.White),
 		goal: widget.NewEntry(),
-		rg:   widget.NewRadioGroup([]string{"C", "F"}, func(string) {}),
 	}
+	s.rg = widget.NewRadioGroup([]string{"C", "F"}, func(selected string) {
+		go func() {
+			if selected == "C" {
+				s.m.Units(units.Celsius)
+			} else {
+				s.m.Units(units.Fahrenheit)
+			}
+		}()
+	})
 
 	s.rg.Hidden = false
 	s.rg.Horizontal = true
@@ -112,39 +119,62 @@ func NewState(m *mug.Mug) *State {
 
 func (s *State) Start() {
 	go func() {
-		var connected bool
-		var unitsRead bool
+		mugChanges := make(chan mug.MugInfo, 1)
+		s.m.AddMugListener(mug.MugListenerFunc(func(info mug.MugInfo) {
+			mugChanges <- info
+		}))
 
-		current := units.Temperature(25.0)
-		target := units.Temperature(54.0)
-		state := mug.Empty
-		unit := units.Celsius
+		conChanges := make(chan event.ConnectionChange, 1)
+		s.m.AddConnectionChangeListener(event.ConnectionChangeFunc(func(info event.ConnectionChange) {
+			fmt.Printf("connected: %v\n", info.Connected)
+			conChanges <- info
+		}))
 
 		for {
+			var info mug.MugInfo
+
+			s.icon.Refresh()
+			s.goal.Refresh()
+			s.temp.Refresh()
+			s.rg.Refresh()
+			if s.c != nil {
+				s.c.Objects[0] = s.temp
+				s.c.Objects[1] = s.icon
+				s.c.Refresh()
+			}
+
+			select {
+			case info = <-mugChanges:
+			case con := <-conChanges:
+				if !con.Connected {
+					s.icon = s.states[MUG_NONE]
+					continue
+				}
+
+				info = s.m.All()
+			}
 
 			//fmt.Printf("target: %v\n", target)
 			//fmt.Printf("current: %v\n", current)
 			//fmt.Printf("state: %v\n", state)
 
-			zone := calcTempZone(current, target)
+			zone := calcTempZone(info.Drink, info.Target)
 			switch {
-			case !connected:
-				s.icon = s.states[MUG_NONE]
-			case state == mug.Empty:
+			case info.State == mug.Empty:
 				s.icon = s.states[MUG_EMPTY]
 			case zone == MUG_COLD:
 				s.icon = s.states[MUG_COLD]
-				if state == mug.Heating {
+				if info.State == mug.Heating {
 					s.icon = s.states[MUG_COLD_HEATING]
 				}
 			case zone == MUG_COOL:
 				s.icon = s.states[MUG_COOL]
-				if state == mug.Heating {
+				if info.State == mug.Heating {
 					s.icon = s.states[MUG_COOL_HEATING]
 				}
 			case zone == MUG_PERFECT:
 				s.icon = s.states[MUG_PERFECT]
-				if state == mug.Heating {
+				if info.State == mug.Heating {
 					s.icon = s.states[MUG_PERFECT_HEATING]
 				}
 			case zone == MUG_WARM:
@@ -153,49 +183,14 @@ func (s *State) Start() {
 				s.icon = s.states[MUG_HOT]
 			}
 
-			if s.rg.Selected == "C" {
-				s.goal.Text = fmt.Sprintf("%0.01f °C", target.C())
-				s.temp.Text = fmt.Sprintf("%0.01f °C", current.C())
+			if info.Units == units.Celsius {
+				s.rg.Selected = "C"
+				s.goal.Text = fmt.Sprintf("%0.01f °C", info.Target.C())
+				s.temp.Text = fmt.Sprintf("%0.01f °C", info.Drink.C())
 			} else {
-				s.goal.Text = fmt.Sprintf("%0.01f °F", target.F())
-				s.temp.Text = fmt.Sprintf("%0.01f °F", current.F())
-			}
-			s.icon.Refresh()
-			s.goal.Refresh()
-			s.temp.Refresh()
-			if s.c != nil {
-				s.c.Objects[0] = s.temp
-				s.c.Objects[1] = s.icon
-				s.c.Refresh()
-			}
-
-			time.Sleep(1 * time.Second)
-
-			var err error
-
-			target, _ = s.m.Target()
-			current, _ = s.m.Current(context.Background())
-			unit, err = s.m.Units()
-			if err == nil {
-				if unitsRead {
-					out := units.Celsius
-					if s.rg.Selected == "F" {
-						out = units.Fahrenheit
-					}
-					_, _ = s.m.Units(out)
-				} else {
-					unitsRead = true
-					s.rg.Selected = "C"
-					if unit == units.Fahrenheit {
-						s.rg.Selected = "F"
-					}
-				}
-			}
-			state, err = s.m.State()
-
-			connected = true
-			if err != nil {
-				connected = false
+				s.rg.Selected = "F"
+				s.goal.Text = fmt.Sprintf("%0.01f °F", info.Target.F())
+				s.temp.Text = fmt.Sprintf("%0.01f °F", info.Drink.F())
 			}
 		}
 	}()

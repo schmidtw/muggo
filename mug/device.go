@@ -17,16 +17,25 @@ type DeviceInfo struct {
 }
 
 func (m *Mug) DeviceInfo() (*DeviceInfo, error) {
-	data, err := m.io(m, mugApi_FIRMWARE_INFO, 0)
+	data, _, err := m.io(m, mugApi_FIRMWARE_INFO, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	serial, err := m.io(m, mugApi_ID, 0)
+	serial, _, err := m.io(m, mugApi_ID, 0)
 	if err != nil {
 		return nil, err
 	}
 
+	di := deviceInfoFromData(data, serial)
+	if di != nil {
+		return di, nil
+	}
+
+	return nil, ErrNotSupported
+}
+
+func deviceInfoFromData(data, serial []byte) *DeviceInfo {
 	var serialNumber string
 	if len(serial) > 6 {
 		// It's not clear what the first 6 bytes are, but they are not
@@ -39,7 +48,7 @@ func (m *Mug) DeviceInfo() (*DeviceInfo, error) {
 			FirmwareVersion: binary.LittleEndian.Uint16(data[0:2]),
 			HardwareVersion: binary.LittleEndian.Uint16(data[2:4]),
 			SerialNumber:    serialNumber,
-		}, nil
+		}
 	}
 
 	if len(data) == 6 {
@@ -48,10 +57,10 @@ func (m *Mug) DeviceInfo() (*DeviceInfo, error) {
 			HardwareVersion:   binary.LittleEndian.Uint16(data[2:4]),
 			BootloaderVersion: binary.LittleEndian.Uint16(data[4:6]),
 			SerialNumber:      serialNumber,
-		}, nil
+		}
 	}
 
-	return nil, ErrNotSupported
+	return nil
 }
 
 func DeviceInfoTTL(ttl time.Duration) Option {

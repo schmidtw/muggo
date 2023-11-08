@@ -9,12 +9,27 @@ import (
 
 // Empty returns if the mug is empty.
 func (m *Mug) IsEmpty() (bool, error) {
-	data, err := m.io(m, mugApi_LIQUID_LEVEL, 1)
+	data, changed, err := m.io(m, mugApi_LIQUID_LEVEL, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return (data[0] == 0x00), nil
+	if changed {
+		m.dispatch()
+	}
+
+	return emptyFromData(data), nil
+}
+
+func (m *Mug) emptyChanged() {
+	m.m.Lock()
+	m.apis[mugApi_LIQUID_LEVEL].expire()
+	m.m.Unlock()
+	_, _ = m.IsEmpty()
+}
+
+func emptyFromData(data []byte) bool {
+	return (data[0] == 0x00)
 }
 
 // DrinkTempTTL sets the TTL for the temperature of the drink in the mug.

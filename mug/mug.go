@@ -27,27 +27,27 @@ const (
 )
 
 const (
-	mugApi_NAME                     = 1  // Mug name
-	mugApi_TEMP                     = 2  // Drink temperature
-	mugApi_TARGET                   = 3  // Target drink temperature
-	mugApi_UNITS                    = 4  // Temperature units
-	mugApi_LIQUID_LEVEL             = 5  // Liquid level
-	mugApi_TIME_DATE_ZONE           = 6  // Time date and zone
-	mugApi_BATTERY                  = 7  // Battery
-	mugApi_STATE                    = 8  // Liquid state
-	mugApi_VOLUME                   = 9  // Volume
-	mugApi_LAST_LOCATION            = 10 // Last location
-	mugApi_ACCERATION               = 11 // Acceleration
-	mugApi_FIRMWARE_INFO            = 12 // Firmware information
-	mugApi_ID                       = 13 // Mug ID
-	mugApi_KEY_0                    = 14 // Key 0
-	mugApi_KEY_1                    = 15 // Key 1
-	mugApi_CONTROL_REGISTER_ADDRESS = 16 // Control register address
-	mugApi_CONTROL_REGISTER_DATA    = 17 // Control register data
-	mugApi_PUSH_EVENT               = 18 // Push event
-	mugApi_STATISTICS               = 19 // Statistics
-	mugApi_LED                      = 20 // Characteristic LED
-	mugApi_LAST                     = 21
+	mugApi_NAME           = 1  // Mug name
+	mugApi_DRINK          = 2  // Drink temperature
+	mugApi_TARGET         = 3  // Target drink temperature
+	mugApi_UNITS          = 4  // Temperature units
+	mugApi_LIQUID_LEVEL   = 5  // Liquid level
+	mugApi_TIME_DATE_ZONE = 6  // Time date and zone
+	mugApi_BATTERY        = 7  // Battery
+	mugApi_STATE          = 8  // Liquid state
+	mugApi_VOLUME         = 9  // Volume
+	mugApi_UNKNOWN_0      = 10 // Unknown
+	mugApi_ACCERATION     = 11 // Acceleration
+	mugApi_FIRMWARE_INFO  = 12 // Firmware information
+	mugApi_ID             = 13 // Mug ID
+	mugApi_KEY_0          = 14 // Key 0
+	mugApi_KEY_1          = 15 // Key 1
+	mugApi_UNKNOWN_1      = 16 // Unknown
+	mugApi_UNKNOWN_2      = 17 // Unknown
+	mugApi_PUSH_EVENT     = 18 // Push event
+	mugApi_UNKNOWN_3      = 19 // Unknown
+	mugApi_LED            = 20 // Characteristic LED
+	mugApi_LAST           = 21
 )
 
 var (
@@ -66,10 +66,19 @@ var (
 			EmberTravelMugAltMainServiceUUID,
 			EmberTravelMugPairServiceUUID,
 		),
+		// Set the timeouts so they don't all happen at once if possible.
+		// Fast moving data
+		DrinkTTL(8 * time.Second),
+		EmptyTTL(9 * time.Second),
+		StateTTL(10 * time.Second),
+		BatteryTTL(15 * time.Second),
+
+		// Slow moving data
 		NameTTL(24 * time.Hour),
-		CurrentTTL(10 * time.Second),
-		TargetTTL(24 * time.Hour),
-		EmptyTTL(10 * time.Second),
+		TargetTTL(24*time.Hour + 1*time.Minute),
+		LedTTL(24*time.Hour + 2*time.Minute),
+		DeviceInfoTTL(24*time.Hour + 3*time.Minute),
+		UnitsTTL(24*time.Hour + 4*time.Minute),
 	}
 )
 
@@ -80,18 +89,21 @@ type Mug struct {
 	adapter  *bt.Adapter
 	interval time.Duration
 
+	mugListeners              eventor.Eventor[MugListener]
+	changeConnectionListeners eventor.Eventor[event.ConnectionChangeListener]
+
 	address      bt.Address
 	serviceUUIDs []bt.UUID
+
+	connShutdown context.CancelFunc
 
 	shutdown context.CancelFunc
 	now      func() time.Time
 
-	changeConnectionListeners eventor.Eventor[event.ConnectionChangeListener]
-
 	apis map[int]*cached
 
 	// This makes testing easier because we can mock the device easily.
-	io func(m *Mug, api int, length int, write ...[]byte) ([]byte, error)
+	io func(m *Mug, api int, length int, write ...[]byte) ([]byte, bool, error)
 }
 
 type Option interface {
@@ -151,7 +163,10 @@ func (m *Mug) Stop() {
 	if shutdown != nil {
 		shutdown()
 	}
+}
 
+func (m *Mug) AddConnectionChangeListener(listener event.ConnectionChangeListener) {
+	m.changeConnectionListeners.Add(listener)
 }
 
 func (m *Mug) run(ctx context.Context) {
@@ -199,8 +214,9 @@ func (m *Mug) run(ctx context.Context) {
 			return
 
 		case <-disconnected:
+			fmt.Println("disconnected in loop")
 			connected = false
-			m.disconnected()
+			m.disconnect()
 		}
 	}
 }
@@ -252,6 +268,9 @@ func (m *Mug) scan(ctx context.Context) (*bt.ScanResult, error) {
 	case <-ctx.Done():
 		m.m.Lock()
 		m.address = bt.Address{}
+		if m.connShutdown != nil {
+			m.connShutdown()
+		}
 		m.m.Unlock()
 		return nil, ctx.Err()
 	case result := <-ch:
@@ -263,7 +282,7 @@ func (m *Mug) scan(ctx context.Context) (*bt.ScanResult, error) {
 }
 
 func (m *Mug) connect(result *bt.ScanResult) error {
-	fmt.Println("found, connecting")
+	fmt.Println("found one, connecting")
 	address := result.Address
 	device, err := m.adapter.Connect(address, bt.ConnectionParams{})
 	if err != nil {
@@ -277,6 +296,7 @@ func (m *Mug) connect(result *bt.ScanResult) error {
 
 	m.m.Lock()
 	m.address = address
+	wait := sync.WaitGroup{}
 	for _, service := range services {
 		if !m.isWantedService(service.UUID()) {
 			continue
@@ -294,20 +314,41 @@ func (m *Mug) connect(result *bt.ScanResult) error {
 				m.apis[id] = &cached{}
 			}
 			m.apis[id].characteristic = char
+
+			// If we are connected, we want to read the mug data without delay.
+			wait.Add(1)
+			go func() {
+				data, err := m.apis[id].read(m.now())
+				if err != nil {
+					fmt.Printf("id: %d - err: %v\n", id, err)
+				} else {
+					fmt.Printf("id: %d - data: %x\n", id, data)
+				}
+				wait.Done()
+			}()
 		}
 	}
-	m.m.Unlock()
 
-	return nil
+	wait.Wait()
+
+	connCtx, cancel := context.WithCancel(context.Background())
+	m.connShutdown = cancel
+	err = m.startNotifications(connCtx)
+	m.m.Unlock()
+	m.notifyConnectionChange(true)
+	m.dispatch()
+
+	return err
 }
 
-func (m *Mug) disconnected() {
+func (m *Mug) disconnect() {
 	m.m.Lock()
-	defer m.m.Unlock()
-
 	for k := range m.apis {
 		m.apis[k].characteristic = nil
 	}
+	m.m.Unlock()
+
+	m.notifyConnectionChange(false)
 }
 
 func (m *Mug) isWantedService(uuid bt.UUID) bool {
@@ -338,34 +379,48 @@ func uuidToApiId(uuid bt.UUID) int {
 	return (0xff&int(id[13]))<<8 + (0xff & int(id[12]))
 }
 
-func lockedIO(m *Mug, api int, length int, write ...[]byte) ([]byte, error) {
+func lockedIO(m *Mug, api int, length int, write ...[]byte) ([]byte, bool, error) {
 	m.m.Lock()
 	defer m.m.Unlock()
 
+	prev := m.apis[api].data
+
 	impl, ok := m.apis[api]
 	if !ok || impl == nil {
-		return nil, ErrNotSupported
+		return nil, false, ErrNotSupported
 	}
 
 	if len(write) > 0 {
 		_, err := impl.write(write[0])
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 
 	rv, err := impl.read(m.now())
 	if err != nil {
-		return nil, err
+		return nil, false, err
+	}
+
+	changed := false
+	if len(rv) != len(prev) {
+		changed = true
+	} else {
+		for i := 0; i < len(rv); i++ {
+			if rv[i] != prev[i] {
+				changed = true
+				break
+			}
+		}
 	}
 
 	if length < 1 {
-		return rv, err
+		return rv, changed, err
 	}
 
 	if len(rv) != length {
-		return nil, ErrNotSupported
+		return nil, false, ErrNotSupported
 	}
 
-	return rv, nil
+	return rv, changed, nil
 }

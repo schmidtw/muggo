@@ -18,6 +18,7 @@ var (
 type TemperatureUnit string
 
 const (
+	Unknown    TemperatureUnit = ""
 	Celsius    TemperatureUnit = "C"
 	Fahrenheit TemperatureUnit = "F"
 )

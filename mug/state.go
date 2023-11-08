@@ -51,16 +51,30 @@ func (s State) String() string {
 
 // State returns the current state of the mug.
 func (m *Mug) State() (State, error) {
-	data, err := m.io(m, mugApi_STATE, 1)
+	data, changed, err := m.io(m, mugApi_STATE, 1)
 	if err != nil {
 		return Unknown, err
 	}
 
-	if state, ok := stateMap[data[0]]; ok {
-		return state, nil
+	if changed {
+		m.dispatch()
 	}
 
-	return Unknown, nil
+	return stateFromData(data), nil
+}
+
+func (m *Mug) stateChanged() {
+	m.m.Lock()
+	m.apis[mugApi_STATE].expire()
+	m.m.Unlock()
+	_, _ = m.State()
+}
+
+func stateFromData(data []byte) State {
+	if state, ok := stateMap[data[0]]; ok {
+		return state
+	}
+	return Unknown
 }
 
 // StateTTL sets the TTL for the state of the mug.

@@ -15,19 +15,23 @@ func (m *Mug) Led(rgba ...color.NRGBA) (*color.NRGBA, error) {
 		write = [][]byte{[]byte{rgba[0].R, rgba[0].G, rgba[0].B, rgba[0].A}}
 	}
 
-	data, err := m.io(m, mugApi_LED, 4, write...)
+	data, _, err := m.io(m, mugApi_LED, 4, write...)
 	if err != nil {
 		return nil, err
 	}
 
-	rv := color.NRGBA{
+	rv := ledFromData(data)
+
+	return &rv, nil
+}
+
+func ledFromData(data []byte) color.NRGBA {
+	return color.NRGBA{
 		R: data[0],
 		G: data[1],
 		B: data[2],
 		A: data[3],
 	}
-
-	return &rv, nil
 }
 
 func LedTTL(ttl time.Duration) Option {

@@ -16,44 +16,52 @@ type cached struct {
 	ttl            time.Duration
 }
 
-func (m *cached) returnCached(now time.Time) bool {
-	if m.fetched.IsZero() || m.fetched.Add(m.ttl).Before(now) {
+func (c *cached) returnCached(now time.Time) bool {
+	if c.fetched.IsZero() || c.fetched.Add(c.ttl).Before(now) {
 		return false
 	}
 	return true
 }
 
-func (m *cached) read(now time.Time) ([]byte, error) {
-	if m.characteristic == nil {
+func (c *cached) expire() {
+	c.fetched = time.Time{}
+}
+
+func (c *cached) read(now time.Time) ([]byte, error) {
+	if c.characteristic == nil {
 		return nil, ErrNotConnected
 	}
 
 	// If now is zero, we are forcing a fetch.
-	if !now.IsZero() && m.returnCached(now) {
-		return m.data, nil
+	if !now.IsZero() && c.returnCached(now) {
+		return c.data, nil
 	}
 
-	max, err := m.characteristic.GetMTU()
+	max, err := c.characteristic.GetMTU()
 	if err != nil {
 		return nil, err
 	}
 
 	data := make([]byte, max)
-	len, err := m.characteristic.Read(data)
+	len, err := c.characteristic.Read(data)
 	if err != nil {
 		return nil, err
 	}
 
-	m.data = data[:len]
-	m.fetched = now
+	c.data = data[:len]
+	c.fetched = now
 
-	return m.data, nil
+	return c.data, nil
 }
 
-func (m *cached) write(data []byte) (int, error) {
-	l, err := m.characteristic.WriteWithoutResponse(data)
+func (c *cached) write(data []byte) (int, error) {
+	if c.characteristic == nil {
+		return 0, ErrNotConnected
+	}
+
+	l, err := c.characteristic.WriteWithoutResponse(data)
 	if err != nil {
-		m.fetched = time.Time{}
+		c.fetched = time.Time{}
 	}
 	return l, err
 }

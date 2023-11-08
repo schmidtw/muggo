@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"image/color"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"github.com/schmidtw/muggo/assets"
 	"github.com/schmidtw/muggo/mug"
+	"github.com/schmidtw/muggo/mug/event"
 )
 
 type Battery struct {
@@ -75,12 +75,31 @@ func NewBattery(m *mug.Mug) *Battery {
 
 func (b *Battery) Start() {
 	go func() {
+		mugChanges := make(chan mug.BatteryInfo, 1)
+		b.m.AddMugListener(mug.MugListenerFunc(func(info mug.MugInfo) {
+			mugChanges <- info.Battery
+		}))
+
+		conChanges := make(chan event.ConnectionChange, 1)
+		b.m.AddConnectionChangeListener(event.ConnectionChangeFunc(func(info event.ConnectionChange) {
+			conChanges <- info
+		}))
+
 		for {
-			time.Sleep(1 * time.Second)
-			bi, err := b.m.BatteryInfo()
-			if err == nil {
-				b.update(bi)
+			var info mug.BatteryInfo
+
+			select {
+			case info = <-mugChanges:
+			case con := <-conChanges:
+				if !con.Connected {
+					continue
+				}
+
+				all := b.m.All()
+				info = all.Battery
 			}
+
+			b.update(info)
 		}
 	}()
 }
