@@ -4,6 +4,7 @@
 package mug
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -46,7 +47,15 @@ func (s State) String() string {
 		return rv
 	}
 
-	return "Unknown"
+	return fmt.Sprintf("Unknown (%d)", s)
+}
+
+func (s State) IsUnknown() bool {
+	if _, ok := stateStringMap[s]; ok {
+		return false
+	}
+
+	return true
 }
 
 // State returns the current state of the mug.

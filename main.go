@@ -35,7 +35,7 @@ func main() {
 	battery.Start()
 	personalize := NewPersonalize(m, w)
 	personalize.Start()
-	state := NewState(m)
+	state := NewState(m, w)
 	state.Start()
 
 	info := container.NewVBox(

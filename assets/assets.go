@@ -59,11 +59,11 @@ var MugWarm []byte
 //go:embed mug-hot.svg
 var MugHot []byte
 
-//go:embed mug-cold.svg
+//go:embed mug-cold-heating.svg
 var MugColdHeating []byte
 
-//go:embed mug-cool.svg
+//go:embed mug-cool-heating.svg
 var MugCoolHeating []byte
 
-//go:embed mug-perfect.svg
+//go:embed mug-perfect-heating.svg
 var MugPerfectHeating []byte

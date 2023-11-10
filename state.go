@@ -10,6 +10,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/schmidtw/muggo/assets"
 	"github.com/schmidtw/muggo/mug"
@@ -31,16 +33,18 @@ const (
 )
 
 type State struct {
-	m      *mug.Mug
-	states map[int]*canvas.Image
-	goal   *widget.Entry
-	icon   *canvas.Image
-	temp   *canvas.Text
-	c      *fyne.Container
-	rg     *widget.RadioGroup
+	m         *mug.Mug
+	states    map[int]*canvas.Image
+	goalEntry *widget.Entry
+	goal      *canvas.Text
+	icon      *canvas.Image
+	temp      *canvas.Text
+	c         *fyne.Container
+	rg        *widget.RadioGroup
+	edit      *widget.Button
 }
 
-func NewState(m *mug.Mug) *State {
+func NewState(m *mug.Mug, w fyne.Window) *State {
 	s := State{
 		m: m,
 		states: map[int]*canvas.Image{
@@ -73,20 +77,20 @@ func NewState(m *mug.Mug) *State {
 				FillMode: canvas.ImageFillOriginal,
 			},
 			MUG_COLD_HEATING: {
-				Resource: fyne.NewStaticResource("mug-cold.svg", assets.MugCold),
+				Resource: fyne.NewStaticResource("mug-cold-heating.svg", assets.MugColdHeating),
 				FillMode: canvas.ImageFillOriginal,
 			},
 			MUG_COOL_HEATING: {
-				Resource: fyne.NewStaticResource("mug-cool.svg", assets.MugCool),
+				Resource: fyne.NewStaticResource("mug-cool-heating.svg", assets.MugCoolHeating),
 				FillMode: canvas.ImageFillOriginal,
 			},
 			MUG_PERFECT_HEATING: {
-				Resource: fyne.NewStaticResource("mug-perfect.svg", assets.MugPerfect),
+				Resource: fyne.NewStaticResource("mug-perfect-heating.svg", assets.MugPerfectHeating),
 				FillMode: canvas.ImageFillOriginal,
 			},
 		},
 		temp: canvas.NewText(" 78.0 °F", color.White),
-		goal: widget.NewEntry(),
+		goal: canvas.NewText("78.0 °F", color.White),
 	}
 	s.rg = widget.NewRadioGroup([]string{"C", "F"}, func(selected string) {
 		go func() {
@@ -98,19 +102,58 @@ func NewState(m *mug.Mug) *State {
 		}()
 	})
 
+	s.goalEntry = widget.NewEntry()
+	s.edit = widget.NewButtonWithIcon("",
+		theme.DocumentCreateIcon(),
+		func() {
+			dialog.ShowForm("Set Target", "Set", "Cancel", []*widget.FormItem{
+				widget.NewFormItem("Target", s.goalEntry),
+			}, func(bool) {
+				go func() {
+					target := s.goalEntry.Text
+
+					// Try parsing assuming no units are provided.
+					temp, err := units.ParseTemperature(target + s.rg.Selected)
+					if err != nil {
+						// Try parsing assuming units are provided.
+						temp, err = units.ParseTemperature(target)
+					}
+
+					if err == nil {
+						_, err = s.m.Target(temp)
+						if err != nil {
+							fmt.Println(err)
+						}
+						if s.rg.Selected == "C" {
+							s.goal.Text = fmt.Sprintf("%0.01f °C", temp.C())
+							s.goalEntry.Text = fmt.Sprintf("%0.01f", temp.C())
+						} else {
+							s.goal.Text = fmt.Sprintf("%0.01f °F", temp.F())
+							s.goalEntry.Text = fmt.Sprintf("%0.01f", temp.C())
+						}
+						s.goal.Refresh()
+					}
+				}()
+			}, w)
+		})
+
 	s.rg.Hidden = false
 	s.rg.Horizontal = true
 	s.rg.Selected = "C"
 
 	s.temp.Alignment = fyne.TextAlignCenter
 	s.temp.TextSize = 48
-	s.goal.PlaceHolder = "78.0 °F"
 	s.icon = s.states[MUG_NONE]
 	s.c = container.NewVBox(
 		s.temp,
 		s.icon,
 		widget.NewForm(
-			widget.NewFormItem("Favorite", s.goal),
+			widget.NewFormItem("Target",
+				container.NewHBox(
+					s.goal,
+					s.edit,
+				),
+			),
 			widget.NewFormItem("Units", s.rg),
 		),
 	)
@@ -126,7 +169,6 @@ func (s *State) Start() {
 
 		conChanges := make(chan event.ConnectionChange, 1)
 		s.m.AddConnectionChangeListener(event.ConnectionChangeFunc(func(info event.ConnectionChange) {
-			fmt.Printf("connected: %v\n", info.Connected)
 			conChanges <- info
 		}))
 
@@ -156,7 +198,9 @@ func (s *State) Start() {
 
 			//fmt.Printf("target: %v\n", target)
 			//fmt.Printf("current: %v\n", current)
-			//fmt.Printf("state: %v\n", state)
+			if info.State.IsUnknown() {
+				fmt.Printf("state: %s\n", info.State.String())
+			}
 
 			zone := calcTempZone(info.Drink, info.Target)
 			switch {
@@ -186,10 +230,12 @@ func (s *State) Start() {
 			if info.Units == units.Celsius {
 				s.rg.Selected = "C"
 				s.goal.Text = fmt.Sprintf("%0.01f °C", info.Target.C())
+				s.goalEntry.Text = fmt.Sprintf("%0.01f °C", info.Target.C())
 				s.temp.Text = fmt.Sprintf("%0.01f °C", info.Drink.C())
 			} else {
 				s.rg.Selected = "F"
 				s.goal.Text = fmt.Sprintf("%0.01f °F", info.Target.F())
+				s.goalEntry.Text = fmt.Sprintf("%0.01f °F", info.Target.F())
 				s.temp.Text = fmt.Sprintf("%0.01f °F", info.Drink.F())
 			}
 		}
