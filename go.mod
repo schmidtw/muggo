@@ -3,7 +3,7 @@ module github.com/schmidtw/muggo
 go 1.21.3
 
 require (
-	fyne.io/fyne/v2 v2.4.1
+	fyne.io/fyne/v2 v2.4.2
 	github.com/lusingander/colorpicker v0.7.2
 	github.com/stretchr/testify v1.8.4
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	fyne.io/systray v1.10.1-0.20230722100817-88df1e0ffa9a // indirect
+	fyne.io/systray v1.10.1-0.20231115130155-104f5ef7839e // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fredbi/uri v1.1.0 // indirect
