@@ -3,7 +3,7 @@ module github.com/schmidtw/muggo
 go 1.21.3
 
 require (
-	fyne.io/fyne/v2 v2.4.2
+	fyne.io/fyne/v2 v2.4.3
 	github.com/lusingander/colorpicker v0.7.2
 	github.com/stretchr/testify v1.8.4
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
