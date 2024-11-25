@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	fyne.io/fyne/v2 v2.5.2
 	github.com/lusingander/colorpicker v0.7.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
 	tinygo.org/x/bluetooth v0.10.0
 )
