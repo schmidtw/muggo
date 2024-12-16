@@ -3,7 +3,7 @@ module github.com/schmidtw/muggo
 go 1.21.3
 
 require (
-	fyne.io/fyne/v2 v2.5.2
+	fyne.io/fyne/v2 v2.5.3
 	github.com/lusingander/colorpicker v0.7.3
 	github.com/stretchr/testify v1.10.0
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
@@ -17,7 +17,7 @@ require (
 	github.com/fredbi/uri v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fyne-io/gl-js v0.0.0-20230506162202-1fdaa286a934 // indirect
-	github.com/fyne-io/glfw-js v0.0.0-20240101223322-6e1efdc71b7a // indirect
+	github.com/fyne-io/glfw-js v0.0.0-20241126112943-313d8a0fe1d0 // indirect
 	github.com/fyne-io/image v0.0.0-20240417123036-dc0ee9e7c964 // indirect
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
@@ -30,7 +30,7 @@ require (
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rymdport/portal v0.2.6 // indirect
+	github.com/rymdport/portal v0.3.0 // indirect
 	github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/soypat/cyw43439 v0.0.0-20240609122733-da9153086796 // indirect
