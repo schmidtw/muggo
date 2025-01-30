@@ -8,7 +8,7 @@ require (
 	github.com/lusingander/colorpicker v0.7.4
 	github.com/stretchr/testify v1.10.0
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
-	tinygo.org/x/bluetooth v0.10.0
+	tinygo.org/x/bluetooth v0.11.0
 )
 
 require (
@@ -34,7 +34,7 @@ require (
 	github.com/rymdport/portal v0.3.0 // indirect
 	github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/soypat/cyw43439 v0.0.0-20240609122733-da9153086796 // indirect
+	github.com/soypat/cyw43439 v0.0.0-20241116210509-ae1ce0e084c5 // indirect
 	github.com/soypat/seqs v0.0.0-20240527012110-1201bab640ef // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
