@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	fyne.io/fyne/v2 v2.7.0
+	fyne.io/fyne/v2 v2.7.1
 	github.com/lusingander/colorpicker v0.7.5
 	github.com/stretchr/testify v1.11.1
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
