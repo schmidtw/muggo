@@ -9,7 +9,7 @@ require (
 	github.com/lusingander/colorpicker v0.7.5
 	github.com/stretchr/testify v1.11.1
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
-	tinygo.org/x/bluetooth v0.13.0
+	tinygo.org/x/bluetooth v0.14.0
 )
 
 require (
