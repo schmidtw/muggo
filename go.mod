@@ -1,6 +1,6 @@
 module github.com/schmidtw/muggo
 
-go 1.23.0
+go 1.23.8
 
 toolchain go1.24.1
 
@@ -9,7 +9,7 @@ require (
 	github.com/lusingander/colorpicker v0.7.5
 	github.com/stretchr/testify v1.11.1
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
-	tinygo.org/x/bluetooth v0.14.0
+	tinygo.org/x/bluetooth v0.15.0
 )
 
 require (
@@ -36,14 +36,15 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rymdport/portal v0.4.2 // indirect
-	github.com/saltosystems/winrt-go v0.0.0-20240509164145-4f7860a3bd2b // indirect
+	github.com/saltosystems/winrt-go v0.0.0-20260317170058-9c2fec580d96 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/soypat/cyw43439 v0.0.0-20250505012923-830110c8f4af // indirect
+	github.com/soypat/cyw43439 v0.1.0 // indirect
+	github.com/soypat/lneto v0.1.0 // indirect
 	github.com/soypat/seqs v0.0.0-20250124201400-0d65bc7c1710 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/tinygo-org/cbgo v0.0.4 // indirect
-	github.com/tinygo-org/pio v0.2.0 // indirect
+	github.com/tinygo-org/pio v0.3.0 // indirect
 	github.com/yuin/goldmark v1.7.11 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
 	golang.org/x/image v0.26.0 // indirect
