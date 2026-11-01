@@ -7,7 +7,7 @@ require (
 	github.com/lusingander/colorpicker v0.7.5
 	github.com/stretchr/testify v1.12.1
 	github.com/xmidt-org/eventor v0.0.0-20230910205925-8ff168bd12ed
-	tinygo.org/x/bluetooth v0.16.0
+	tinygo.org/x/bluetooth v0.17.0
 )
 
 require (
@@ -35,14 +35,14 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
 	github.com/rymdport/portal v0.4.2 // indirect
-	github.com/saltosystems/winrt-go v0.0.0-20260317170058-9c2fec580d96 // indirect
+	github.com/saltosystems/winrt-go v0.0.0-20261015065339-8ef619c103a3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/soypat/cyw43439 v0.1.2-0.20260731160358-f2a6af121857 // indirect
-	github.com/soypat/lneto v0.3.2 // indirect
+	github.com/soypat/cyw43439 v0.2.0 // indirect
+	github.com/soypat/lneto v0.4.0 // indirect
 	github.com/soypat/seqs v0.0.0-20260125140838-2c1c6b1bd69e // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
-	github.com/tinygo-org/cbgo v0.0.4 // indirect
+	github.com/tinygo-org/cbgo v0.1.0 // indirect
 	github.com/tinygo-org/pio v0.3.0 // indirect
 	github.com/yuin/goldmark v1.8.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
@@ -51,5 +51,5 @@ require (
 	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	tinygo.org/x/espradio v0.3.0 // indirect
+	tinygo.org/x/espradio v0.5.0 // indirect
 )
