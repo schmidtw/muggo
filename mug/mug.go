@@ -186,8 +186,8 @@ func (m *Mug) run(ctx context.Context) {
 	disconnected := make(chan struct{}, 1)
 
 	m.adapter.SetConnectHandler(
-		func(address bt.Address, connected bool) {
-			m.connectHandler(disconnected, address, connected)
+		func(device bt.Device, connected bool) {
+			m.connectHandler(disconnected, device.Address, connected)
 		})
 
 	var connected bool
@@ -375,8 +375,8 @@ func (m *Mug) notifyConnectionChange(connected bool) {
 }
 
 func uuidToApiId(uuid bt.UUID) int {
-	id := uuid.Bytes()
-	return (0xff&int(id[13]))<<8 + (0xff & int(id[12]))
+	id := uuid.BytesBigEndian()
+	return (0xff&int(id[2]))<<8 + (0xff & int(id[3]))
 }
 
 func lockedIO(m *Mug, api int, length int, write ...[]byte) ([]byte, bool, error) {
